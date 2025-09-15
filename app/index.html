@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <div class="title">
+        <img src="Assets/logo.png" alt="Logo Icon" class="logo">
+        <h1>Task Manager</h1>
+        </div>
+        <svg class = "fullscreen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fullscreen-icon lucide-fullscreen"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="10" height="8" x="7" y="8" rx="1"/></svg>
+    </nav>
+    <aside>
+        <div class="aside-resizer" title="Resize sidebar"></div>
+        <form id="form">
+            <div class="labelRequired">
+                <svg class="requiredLogo" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-alert-icon lucide-circle-alert"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <label for="title">Task: </label>
+            </div>
+            <input type="text" placeholder="Make dinner..." id="task" required>
+            <br>
+            <label for="description">Description: </label>
+            <textarea name="description" cols="30" rows="10" placeholder="Buy groceries, cook dinner (optional)" id="description"></textarea>
+            <br>
+            <label for="due-date">Due Date: </label>
+            <input type="date" id="due-date">
+
+            <label for="priority">Priority: </label>
+            <select name="priority" id="priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+            </select>
+            <br>
+            <button type="submit" id="submit">Save Task</button>
+        </form>
+    </aside>
+    <main>
+        <div class="filters">
+            <button class="filter-btn low">Low Priority</button>
+            <button class="filter-btn medium">Medium Priority</button>
+            <button class="filter-btn high">High Priority</button>
+
+        </div>
+        <div class="list container">
+            <h1 id="no-tasks">No tasks yet</h1>
+            <ul id="task-list">
+
+            </ul>
+        </div>
+    
+
+    </main>
+    <script type="module" src="script.js"></script> 
+</body>
+</html>
