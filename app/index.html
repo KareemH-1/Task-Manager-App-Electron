@@ -1,60 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Task Manager</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <nav>
-        <div class="title">
-        <img src="Assets/logo.png" alt="Logo Icon" class="logo">
+      <div class="title">
+        <img src="Assets/logo.png" alt="Logo Icon" class="logo" />
         <h1>Task Manager</h1>
+      </div>
+      <div class="nav-items">
+        <div class="tasks activePage">
+          <svg
+            class="nav-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-clipboard-list-icon lucide-clipboard-list"
+          >
+            <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+            <path
+              d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+            />
+            <path d="M12 11h4" />
+            <path d="M12 16h4" />
+            <path d="M8 11h.01" />
+            <path d="M8 16h.01" />
+          </svg>
+          <h2>My Tasks</h2>
         </div>
-        <svg class = "fullscreen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fullscreen-icon lucide-fullscreen"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="10" height="8" x="7" y="8" rx="1"/></svg>
+
+        <div class="completed-tasks">
+          <svg
+            class="nav-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-file-check-icon lucide-file-check"
+          >
+            <path
+              d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"
+            />
+            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+            <path d="m9 15 2 2 4-4" />
+          </svg>
+          <h2>Completed Tasks</h2>
+        </div>
+
+        <div class="stats">
+          <svg
+            class="nav-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-chart-column-icon lucide-chart-column"
+          >
+            <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+            <path d="M18 17V9" />
+            <path d="M13 17V5" />
+            <path d="M8 17v-3" />
+          </svg>
+          <h2>Stats</h2>
+        </div>
+        <div class="focus">
+          <svg
+            class="nav-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-timer-icon lucide-timer"
+          >
+            <line x1="10" x2="14" y1="2" y2="2" />
+            <line x1="12" x2="15" y1="14" y2="11" />
+            <circle cx="12" cy="14" r="8" />
+          </svg>
+          <h2>Focus</h2>
+        </div>
+      </div>
+      <svg
+        class="fullscreen"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="lucide lucide-fullscreen-icon lucide-fullscreen"
+      >
+        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+        <rect width="10" height="8" x="7" y="8" rx="1" />
+      </svg>
     </nav>
     <aside>
-        <div class="aside-resizer" title="Resize sidebar"></div>
-        <form id="form">
-            <div class="labelRequired">
-                <svg class="requiredLogo" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-alert-icon lucide-circle-alert"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                <label for="title">Task: </label>
-            </div>
-            <input type="text" placeholder="Make dinner..." id="task" required>
-            <br>
-            <label for="description">Description: </label>
-            <textarea name="description" cols="30" rows="10" placeholder="Buy groceries, cook dinner (optional)" id="description"></textarea>
-            <br>
-            <label for="due-date">Due Date: </label>
-            <input type="date" id="due-date">
+      <div class="aside-resizer" title="Resize sidebar"></div>
+      <form id="form">
+        <div class="labelRequired">
+          <svg
+            class="requiredLogo"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-circle-alert-icon lucide-circle-alert"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" x2="12" y1="8" y2="12" />
+            <line x1="12" x2="12.01" y1="16" y2="16" />
+          </svg>
+          <label for="title">Task: </label>
+        </div>
+        <input type="text" placeholder="Make dinner..." id="task" required />
+        <br />
+        <label for="description">Description: </label>
+        <textarea
+          name="description"
+          cols="30"
+          rows="10"
+          placeholder="Buy groceries, cook dinner (optional)"
+          id="description"
+        ></textarea>
+        <br />
+        <label for="due-date">Due Date: </label>
+        <input type="date" id="due-date" />
 
-            <label for="priority">Priority: </label>
-            <select name="priority" id="priority">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-            </select>
-            <br>
-            <button type="submit" id="submit">Save Task</button>
-        </form>
+        <label for="priority">Priority: </label>
+        <select name="priority" id="priority">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        <br />
+        <button type="submit" id="submit">Save Task</button>
+      </form>
     </aside>
-    <main>
-        <div class="filters">
-            <button class="filter-btn low">Low Priority</button>
-            <button class="filter-btn medium">Medium Priority</button>
-            <button class="filter-btn high">High Priority</button>
+    <section class="content" id="tasks">
+      <div class="filters">
+        <button class="filter-btn low">Low Priority</button>
+        <button class="filter-btn medium">Medium Priority</button>
+        <button class="filter-btn high">High Priority</button>
+      </div>
+      <div class="list container">
+        <h1 id="no-tasks">No tasks yet</h1>
+        <ul id="task-list"></ul>
+      </div>
+    </section>
 
+    <section id="completed" class="content">
+      <div class="list com-container">
+        <h1 class="no-comp">You haven't completed a task yet</h1>
+        <ul id="comp-list"></ul>
+      </div>
+    </section>
+
+    <section id="stats" class="content">
+      <div class="grid">
+        <div class="grid-item">
+        <div class="flex">
+          <div class="fire">
+            <div class="fire-left">
+              <div class="main-fire"></div>
+              <div class="particle-fire"></div>
+            </div>
+            <div class="fire-center">
+              <div class="main-fire"></div>
+              <div class="particle-fire"></div>
+            </div>
+            <div class="fire-right">
+              <div class="main-fire"></div>
+              <div class="particle-fire"></div>
+            </div>
+            <div class="fire-bottom">
+              <div class="main-fire"></div>
+            </div>
+          </div>
+          <h3>0x Streak</h3>
+          </div>
         </div>
-        <div class="list container">
-            <h1 id="no-tasks">No tasks yet</h1>
-            <ul id="task-list">
+      </div>
+      <canvas id="taskCompletionChart"></canvas>
+    </section>
+    <section id="focus" class="content">
+      <h1>Focus Page</h1>
+    </section>
 
-            </ul>
-        </div>
-    
-
-    </main>
-    <script type="module" src="script.js"></script> 
-</body>
+    <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+    <script type="module" src="script.js"></script>
+  </body>
 </html>

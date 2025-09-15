@@ -1,9 +1,58 @@
 import store from './store.js';
+
 const form = document.getElementById("form");
 let noTasks = store.get("noTasks") || 0;
 let completed = store.get("completedCount") || 0;
 const noTasksMsg = document.getElementById("no-tasks");
 const taskList = document.getElementById("task-list");
+
+const changeTasks = () => {
+  let currentScreen = document.querySelector(".activePage");
+  const div = document.querySelector(".tasks");
+  if (currentScreen !== div) {
+    if (currentScreen) currentScreen.classList.remove("activePage");
+    if (div) div.classList.add("activePage");
+    localStorage.setItem("currentPage", "tasks");
+    renderPage("tasks");
+  }
+};
+document.querySelector('.tasks').addEventListener('click', changeTasks);
+
+const changeStats = () => {
+  let currentScreen = document.querySelector(".activePage");
+  const div = document.querySelector(".stats");
+  if (currentScreen !== div) {
+    if (currentScreen) currentScreen.classList.remove("activePage");
+    if (div) div.classList.add("activePage");
+    localStorage.setItem("currentPage", "stats");
+    renderPage("stats");
+  }
+};
+document.querySelector('.stats').addEventListener('click', changeStats);
+
+const changeFocus = () => {
+  let currentScreen = document.querySelector(".activePage");
+  const div = document.querySelector(".focus");
+  if (currentScreen !== div) {
+    if (currentScreen) currentScreen.classList.remove("activePage");
+    if (div) div.classList.add("activePage");
+    localStorage.setItem("currentPage", "focus");
+    renderPage("focus");
+  }
+};
+document.querySelector('.focus').addEventListener('click', changeFocus);
+
+const changeCompletedTasks = () => {
+  let currentScreen = document.querySelector(".activePage");
+  const div = document.querySelector(".completed-tasks");
+  if (currentScreen !== div) {
+    if (currentScreen) currentScreen.classList.remove("activePage");
+    if (div) div.classList.add("activePage");
+    localStorage.setItem("currentPage", "completed");
+    renderPage("completed");
+  }
+};
+document.querySelector('.completed-tasks').addEventListener('click', changeCompletedTasks);
 
 let numLow = 0 , numMedium = 0 , numHigh = 0;
 
@@ -34,6 +83,21 @@ function showNoTasks(show) {
 
 window.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+
+  let currentPage = localStorage.getItem("currentPage") || "tasks";
+  renderPage(currentPage);
+ if(currentPage == "tasks"){
+    changeTasks();
+ }
+ else if(currentPage == "completed"){
+   changeCompletedTasks();
+ }
+ else if(currentPage == "stats"){
+   changeStats();
+ }
+ else{
+    changeFocus();
+ }
   const tasks = store.get("tasks") || [];
   if (tasks.length === 0) {
     showNoTasks(true);
@@ -52,6 +116,17 @@ window.addEventListener("DOMContentLoaded", () => {
     if (noTasks >= 2) addDeleteAll();
   }
   checkPriorityCounts();
+
+  const completedTasks = store.get("completedTasks") || [];
+  completedTasks.forEach((task) =>
+    addCompletedCard(
+      task.title,
+      task.description,
+      task.dueDate,
+      task.priority
+    )
+  );
+
 });
 
 const filterContainer = document.querySelector('.filters');
@@ -196,6 +271,7 @@ document.addEventListener("click", (event) => {
     const prioritySpan = taskItem.querySelector(".task-priority span");
     const priority = prioritySpan ? prioritySpan.textContent : "";
     if (taskItem) {
+      addCompletedCard(title, description, dueDate, priority);
       let tasks = store.get("tasks") || [];
       tasks = tasks.filter((t) => t.title !== title);
       store.set("tasks", tasks);
@@ -415,7 +491,15 @@ document.addEventListener("fullscreenchange", () => {
 window.addEventListener('DOMContentLoaded', () => {
   const aside = document.querySelector('aside');
   const resizer = document.querySelector('.aside-resizer');
-  const main = document.querySelector('main');
+  const main = document.querySelector('.content');
+  if (aside && main) {
+    const savedWidth = localStorage.getItem('asideWidth');
+    const width = savedWidth ? Math.max(180, Math.min(600, parseInt(savedWidth, 10))) : aside.offsetWidth;
+    aside.style.width = width + 'px';
+    document.querySelectorAll('.content').forEach(content => {
+      content.style.marginRight = width + 'px';
+    });
+  }
   let isResizing = false;
   let startX = 0;
   let startWidth = 0;
@@ -432,7 +516,9 @@ window.addEventListener('DOMContentLoaded', () => {
       let newWidth = startWidth + (startX - e.clientX);
       newWidth = Math.max(180, Math.min(600, newWidth));
       aside.style.width = newWidth + 'px';
-      main.style.marginRight = newWidth + 'px';
+       document.querySelectorAll('.content').forEach(content => {
+        content.style.marginRight = newWidth + 'px';
+      });
     });
     document.addEventListener('mouseup', () => {
       if (isResizing) {
@@ -441,5 +527,127 @@ window.addEventListener('DOMContentLoaded', () => {
         document.body.style.userSelect = '';
       }
     });
+
+    const savedWidth = localStorage.getItem('asideWidth');
+    if (savedWidth) {
+      const width = Math.max(180, Math.min(600, parseInt(savedWidth, 10)));
+      aside.style.width = width + 'px';
+      main.style.marginRight = width + 'px';
+    }
+    window.addEventListener('beforeunload', () => {
+      localStorage.setItem('asideWidth', aside.offsetWidth);
+    });
+
+  }
+});
+
+
+const renderPage = (page) => {
+  const tasksSection = document.getElementById('tasks');
+  const completedSection = document.getElementById('completed');
+  const statsSection = document.getElementById('stats');
+  const focusSection = document.getElementById('focus');
+  if (tasksSection) tasksSection.style.display = (page === 'tasks') ? '' : 'none';
+  if (completedSection) completedSection.style.display = (page === 'completed') ? '' : 'none';
+  if (statsSection) statsSection.style.display = (page === 'stats') ? '' : 'none';
+  if (focusSection) focusSection.style.display = (page === 'focus') ? '' : 'none';
+}
+
+const addCompletedCard = (title, description, dueDate, priority) => {
+  const compList = document.getElementById("comp-list");
+  if (compList) {
+    const compItem = document.createElement("div");
+    compItem.className = "comp-item";
+    const backgroundSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>`
+
+    let priorityClass = "";
+    if (priority === "low"){
+       priorityClass = "priorityLow";
+    }
+    else if (priority === "medium") {
+      priorityClass = "priorityMedium";
+    }
+    else if (priority === "high") {
+      priorityClass = "priorityHigh";
+    }
+    compItem.innerHTML = `
+          <h3 class="comp-title">${title}</h3>
+          ${description ? `<p class="comp-description">${description}</p>` : ""}
+          ${dueDate ? `<p class="comp-due-date">Due: ${dueDate}</p>` : ""}
+          ${
+            priority
+              ? `<p class="comp-priority">Priority: <span class="${priorityClass}">${priority}</span></p>`
+              : ""
+          }
+      `;
+    compItem.appendChild(new DOMParser().parseFromString(backgroundSVG, 'image/svg+xml').documentElement);
+    compList.appendChild(compItem);
+    const noCompMsg = document.querySelector(".no-comp");
+    if (noCompMsg) noCompMsg.style.display = 'none';
+  }
+}
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest(".comp-item")) {
+    const compItem = event.target.closest(".comp-item");
+    const title = compItem.querySelector(".comp-title").textContent;
+    const overlay = document.createElement("div");
+    overlay.className = "delete-comp-overlay";
+    const popup = document.createElement("div");
+    popup.className = "delete-comp-popup";
+    popup.innerHTML = `
+      <h2>Delete Completed Task?</h2>
+      <p>Are you sure you want to delete "<strong>${title}</strong>"?</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="confirm-delete-comp">Delete</button>
+        <button class="cancel-delete-comp">Cancel</button>
+      </div>
+    `;
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+
+    overlay.querySelector(".cancel-delete-comp").addEventListener("click", () => {
+      overlay.remove();
+    });
+
+    overlay.querySelector(".confirm-delete-comp").addEventListener("click", () => {
+      compItem.remove();
+      let completedTasks = store.get("completedTasks") || [];
+      completedTasks = completedTasks.filter((t) => t.title !== title);
+      store.set("completedTasks", completedTasks);
+      completed = completedTasks.length;
+      store.set("completedCount", completed);
+      overlay.remove();
+      if (completedTasks.length === 0) {
+        const noCompMsg = document.querySelector(".no-comp");
+        if (noCompMsg) noCompMsg.style.display = '';
+      }
+    });
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+});
+
+
+
+const ctx1 = document.getElementById("taskCompletionChart");
+
+
+new Chart(ctx1, {
+  type: "doughnut",
+  data: {
+    labels: ["Completed", "Pending"],
+    datasets: [{
+      data: [completed, noTasks],
+      backgroundColor: ["#d2aa09ff", "#e0e0e0"]
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: true, position: "bottom" }
+    },
+    cutout: "70%"
   }
 });
