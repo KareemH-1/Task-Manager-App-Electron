@@ -3,3 +3,5 @@ node_modules/
 
 # VSCode settings
 .vscode/
+
+dist/

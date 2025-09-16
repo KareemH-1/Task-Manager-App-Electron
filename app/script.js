@@ -1363,7 +1363,6 @@ function recordPomodoroSession(focusMinutes, breakMinutes) {
   updateStatsAndCharts();
 }
 
-// Completed tasks search functionality
 const completedSearchInput = document.getElementById('completed-search-input');
 
 if (completedSearchInput) {
@@ -1389,7 +1388,6 @@ if (completedSearchInput) {
       }
     });
     
-    // Show/hide "no tasks" message based on visible tasks
     const visibleTasks = document.querySelectorAll('#comp-list .comp-item[style=""], #comp-list .comp-item:not([style])');
     const noCompMsg = document.querySelector('.no-comp');
     if (noCompMsg) {
@@ -1406,7 +1404,6 @@ if (completedSearchInput) {
   });
 }
 
-// Active tasks search functionality
 const tasksSearchInput = document.getElementById('tasks-search-input');
 
 if (tasksSearchInput) {
@@ -1432,7 +1429,6 @@ if (tasksSearchInput) {
       }
     });
     
-    // Show/hide "no tasks" message based on visible tasks
     const visibleTasks = document.querySelectorAll('#task-list .task-item[style=""], #task-list .task-item:not([style])');
     const noTasksMsg = document.getElementById('no-tasks');
     if (noTasksMsg) {
