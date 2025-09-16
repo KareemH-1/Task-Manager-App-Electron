@@ -2,7 +2,7 @@
 
 A modern, feature-rich desktop task management application built with Electron, featuring comprehensive task organization, productivity tracking, and focus tools.
 
-## � Screenshots
+## 📱 Screenshots
 
 <table>
   <tr>
@@ -29,9 +29,16 @@ A modern, feature-rich desktop task management application built with Electron, 
       <p><em>Stay productive with Pomodoro timer, break timer, and stopwatch tools</em></p>
     </td>
   </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <h3>📁 Application Structure</h3>
+      <img src="images/Folder_Image.png" alt="Application Structure" width="70%">
+      <p><em>Clean, organized project structure with modern development practices and comprehensive documentation</em></p>
+    </td>
+  </tr>
 </table>
 
-## �🚀 Features
+## 🚀 Features
 
 ### 📋 Task Management
 - **Create & Edit Tasks**: Add tasks with titles, descriptions, due dates, and priority levels
