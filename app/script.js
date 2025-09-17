@@ -593,22 +593,12 @@ document.addEventListener("click", (event) => {
     if (taskItem) {
       addCompletedCardWithChartUpdate(title, description, dueDate, priority);
       let tasks = store.get("tasks") || [];
-      tasks = tasks.filter((t) => t.title !== title);
+      tasks = tasks.filter((t) => t.id !== taskId);
       store.set("tasks", tasks);
-      let completedTasks = store.get("completedTasks") || [];
-      completedTasks.push({
-        title,
-        description,
-        dueDate,
-        priority,
-        completed: true,
-        completedAt: new Date().toISOString()
-      });
       if (taskItem.querySelector(".priorityLow")) numLow--;
       else if (taskItem.querySelector(".priorityMedium")) numMedium--;
       else if (taskItem.querySelector(".priorityHigh")) numHigh--;
       checkPriorityCounts();
-      store.set("completedTasks", completedTasks);
       noTasks = tasks.length;
       completed = (store.get("completedCount") || 0) + 1;
       store.set("noTasks", noTasks);
@@ -945,16 +935,26 @@ const addCompletedCard = (title, description, dueDate, priority) => {
     const noCompMsg = document.querySelector(".no-comp");
     if (noCompMsg) noCompMsg.style.display = 'none';
     
+    // Save completed task to store for persistence (check for duplicates)
     let completedTasks = store.get("completedTasks") || [];
-    completedTasks.push({
-      title,
-      description,
-      dueDate,
-      priority,
-      completed: true,
-      completedAt: new Date().toISOString()
-    });
-    store.set("completedTasks", completedTasks);
+    const taskExists = completedTasks.some(task => 
+      task.title === title && 
+      task.description === description && 
+      task.dueDate === dueDate && 
+      task.priority === priority
+    );
+    
+    if (!taskExists) {
+      completedTasks.push({
+        title,
+        description,
+        dueDate,
+        priority,
+        completed: true,
+        completedAt: new Date().toISOString()
+      });
+      store.set("completedTasks", completedTasks);
+    }
     
     updateDeleteAllCompletedButton();
   }
