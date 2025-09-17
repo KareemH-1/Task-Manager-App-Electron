@@ -42,31 +42,29 @@ A modern, feature-rich desktop task management application built with Electron, 
 
 ### 📋 Task Management
 - **Create & Edit Tasks**: Add tasks with titles, descriptions, due dates, and priority levels
-- **Priority System**: Organize tasks with Low, Medium, and High priority levels
-- **Task Completion**: Mark tasks as complete with visual feedback
-- **Smart Search**: Real-time search functionality for both active and completed tasks
-- **Priority Filters**: Filter tasks by priority level for better organization
-- **Bulk Operations**: Delete all tasks with a single action
+- **Built-in Timers**: Individual task timers with preset durations (15m, 30m, 45m, 1h, 2h, 3h) and custom settings
+- **Timer Controls**: Start, pause, reset timers with visual progress tracking
+- **Dual Completion**: Complete tasks manually or automatically when timer reaches zero
+- **Priority System**: Organize with Low, Medium, High priority levels and color-coded filters
+- **Smart Search**: Real-time search across titles, descriptions, dates, and priorities
+- **Bulk Operations**: Delete all tasks or completed tasks with single actions
 
 ### ✅ Completed Tasks
-- **Completion Tracking**: View all completed tasks in a dedicated section
-- **Golden Theme**: Completed tasks feature a distinctive golden color scheme
-- **Search & Filter**: Dedicated search functionality for completed tasks
-- **Visual Indicators**: Clear visual distinction between active and completed items
+- **Golden Theme**: Distinctive visual design with dedicated search functionality
+- **Completion Tracking**: View all completed tasks with timestamps
+- **Duplicate Prevention**: Smart system prevents duplicate entries
+- **Bulk Management**: Delete all completed tasks at once
 
 ### 📊 Statistics & Analytics
-- **Comprehensive Charts**: Visual representation of task completion and productivity
+- **Interactive Charts**: Visual productivity data powered by Chart.js
+- **Time Tracking**: Detailed insights into time spent on tasks and timer usage
 - **Streak Tracking**: Monitor consecutive days of task completion
-- **Category Breakdown**: Analyze task distribution across different categories
-- **Weekly Summary**: Track weekly productivity patterns
-- **Productivity Insights**: Detailed analytics for performance optimization
+- **Category Analysis**: Task distribution and weekly productivity patterns
 
 ### ⏰ Focus & Productivity Tools
 - **Pomodoro Timer**: Built-in focus timer with customizable work/break intervals
-- **Break Timer**: Dedicated break timer for proper rest periods
-- **Stopwatch**: General-purpose timing tool
-- **Custom Settings**: Adjustable timer durations to fit your workflow
-- **Session Tracking**: Record and analyze focus sessions
+- **Break Timer & Stopwatch**: Dedicated tools for breaks and general timing
+- **Timer Persistence**: All timer states and progress persist across app sessions
 
 ### 🎨 User Interface
 - **Modern Design**: Clean, dark theme with accent colors
@@ -88,7 +86,7 @@ A modern, feature-rich desktop task management application built with Electron, 
 ### Option 1: Download Pre-built Executable (Recommended)
 
 **For Windows Users:**
-1. Download the latest release: **[Task Manager Setup 1.0.0.exe](https://github.com/KareemH-1/Task-Manager-App-Electron/releases/download/v1.0.0/Task%20Manager%20Setup%201.0.0.exe)**
+1. Download the latest release: **[Task Manager Setup 2.0.2.exe](https://github.com/KareemH-1/Task-Manager-App-Electron/blob/main/Task%20Manager%20Setup%202.0.2.exe)**
 2. Run the installer
 3. Launch the Task Manager from your desktop or start menu
 
@@ -113,48 +111,27 @@ This will create platform-specific installers in the `dist/` directory.
 
 ### Getting Started
 1. Launch the application
-2. Use the sidebar to navigate between different sections
-3. Create your first task using the form in the sidebar
-4. Set priority levels and due dates as needed
+2. Create tasks using the sidebar form with priority levels and due dates
+3. Set timers using preset buttons (15m, 30m, 45m, 1h, 2h, 3h) or custom duration
+4. Use timer controls to start/pause and track progress
+5. Navigate between sections: Tasks, Completed, Statistics, Focus
 
-### Task Management
-- **Adding Tasks**: Fill out the form with task details and click "Save Task"
-- **Editing Tasks**: Click the edit button on any task item
-- **Completing Tasks**: Click the "Complete" button to mark tasks as done
-- **Searching**: Use the search bars to quickly find specific tasks
-- **Filtering**: Use priority filters to focus on specific task types
-
-### Productivity Features
-- **Focus Timer**: Navigate to the Focus section to use the Pomodoro timer
-- **Statistics**: Check the Stats section for detailed productivity analytics
-- **Completed Tasks**: Review your accomplishments in the Completed Tasks section
+### Key Operations
+- **Task Management**: Add, edit, complete tasks manually or via timer
+- **Search & Filter**: Use real-time search and priority filters
+- **Productivity Tools**: Access Pomodoro timer and analytics in dedicated sections
 
 ## 🎯 Key Features in Detail
 
-### Search Functionality
-- **Active Tasks**: Teal-colored search bar with accent color theming
-- **Completed Tasks**: Golden search bar matching completed task styling
-- **Real-time Filtering**: Instant results as you type
-- **Comprehensive Search**: Searches through titles, descriptions, due dates, and priorities
+### Search & Organization
+- **Smart Search**: Real-time filtering across all task properties
+- **Priority System**: Color-coded levels (Low/Medium/High) with dedicated filters
+- **Dual Themes**: Teal for active tasks, golden for completed tasks
 
-### Priority System
-- **Visual Coding**: Color-coded priority levels for quick identification
-- **Filter Options**: Dedicated buttons to filter by priority level
-- **Smart Organization**: Higher priority tasks get visual emphasis
-
-### Data Persistence
-- **Local Storage**: All data is stored locally using Electron Store
-- **Automatic Saving**: Changes are saved automatically
-- **Data Integrity**: Robust data handling prevents loss of information
-
-## 🔧 Configuration
-
-The application uses Electron Store for configuration and data persistence. Settings are automatically saved and restored between sessions.
-
-### Customizable Settings
-- Focus timer duration
-- Break timer duration
-- Theme preferences (future enhancement)
+### Data Management
+- **Local Storage**: Electron Store for reliable data persistence
+- **Session Recovery**: Resume with all timers and progress intact
+- **Automatic Saving**: Real-time data sync with duplicate prevention
 
 ## 📱 Platform Support
 
