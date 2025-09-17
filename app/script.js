@@ -6,6 +6,8 @@ let completed = store.get("completedCount") || 0;
 const noTasksMsg = document.getElementById("no-tasks");
 const taskList = document.getElementById("task-list");
 
+let taskIdCounter = 1;
+
 const changeTasks = () => {
   let currentScreen = document.querySelector(".activePage");
   const div = document.querySelector(".tasks");
@@ -109,23 +111,34 @@ window.addEventListener("DOMContentLoaded", () => {
         task.description,
         task.dueDate,
         task.priority,
-        true
+        true,
+        task.id || Date.now() + Math.random().toString(36).substr(2, 9)
       )
     );
     noTasks = tasks.length;
     if (noTasks >= 2) addDeleteAll();
+    
+    if (tasks.length > 0) {
+      const maxId = Math.max(...tasks.map(task => task.id).filter(id => typeof id === 'number'));
+      if (!isNaN(maxId)) {
+        taskIdCounter = maxId + 1;
+      }
+    }
   }
   checkPriorityCounts();
 
   const completedTasks = store.get("completedTasks") || [];
-  completedTasks.forEach((task) =>
-    addCompletedCard(
+  const visibleCompletedTasks = completedTasks.filter(task => !task.hidden);
+  visibleCompletedTasks.forEach((task) =>
+    displayCompletedCard(
       task.title,
       task.description,
       task.dueDate,
       task.priority
     )
   );
+  
+  updateStatsAndCharts();
 
 });
 
@@ -176,9 +189,13 @@ form.addEventListener("submit", (event) => {
   addTaskWithChartUpdate(task, description, dueDate, priority);
 });
 
-const addTask = (task, description, dueDate, priority, skipSave = false) => {
+const addTask = (task, description, dueDate, priority, skipSave = false, taskId = null) => {
   const taskItem = document.createElement("div");
   taskItem.className = "task-item";
+  
+  const uniqueTaskId = taskId || Date.now() + Math.random().toString(36).substr(2, 9);
+  taskItem.setAttribute('data-task-id', uniqueTaskId);
+  
   let priorityClass = "";
   if (priority === "low"){
      priorityClass = "priorityLow";
@@ -198,19 +215,48 @@ const addTask = (task, description, dueDate, priority, skipSave = false) => {
             ? `<p class="task-priority">Priority: <span class="${priorityClass}">${priority}</span></p>`
             : ""
         }
+        <div class="task-timer-section">
+          <button class="add-timer-btn">Add Timer</button>
+          <div class="task-timer" style="display: none;">
+            <div class="timer-info">
+              <span class="timer-time">00:00:00</span>
+              <div class="timer-controls">
+                <button class="timer-start-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-play-icon lucide-circle-play"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"/><circle cx="12" cy="12" r="10"/></svg>
+                </button>
+                <button class="timer-pause-btn" style="display: none;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause-icon lucide-pause"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>
+                </button>
+                <button class="timer-reset-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer-reset-icon lucide-timer-reset"><path d="M10 2h4"/><path d="M12 14v-4"/><path d="M4 13a8 8 0 0 1 8-7 8 8 0 1 1-5.3 14L4 17.6"/><path d="M9 17H4v5"/></svg>
+                </button>
+                <button class="timer-remove-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            </div>
+            <div class="timer-progress-bar">
+              <div class="timer-progress-fill"></div>
+            </div>
+          </div>
+        </div>
         <div class="task-actions">
         <button class="complete-btn">Complete</button>
         <button class="edit-btn">Edit</button>
         <button class="delete-btn">Delete</button>
         </div>
     `;
-  taskList.appendChild(taskItem);
+  taskList.prepend(taskItem);
+  
+  setupTaskTimer(taskItem);
+  
   form.reset();
   recountPriorities();
   checkPriorityCounts();
   if (!skipSave) {
     const tasks = store.get("tasks") || [];
     tasks.push({
+      id: uniqueTaskId,
       title: task,
       description,
       dueDate,
@@ -225,6 +271,261 @@ const addTask = (task, description, dueDate, priority, skipSave = false) => {
   }
   showNoTasks(false);
 };
+
+function setupTaskTimer(taskItem) {
+  const addTimerBtn = taskItem.querySelector('.add-timer-btn');
+  const timerSection = taskItem.querySelector('.task-timer');
+  const removeTimerBtn = taskItem.querySelector('.timer-remove-btn');
+  
+  const taskId = taskItem.getAttribute('data-task-id');
+  const hasTimerData = localStorage.getItem(`task-timer-${taskId}`) !== null;
+  
+  if (hasTimerData) {
+    addTimerBtn.style.display = 'none';
+    timerSection.style.display = 'block';
+    initializeTimer(taskItem);
+  }
+  
+  addTimerBtn.addEventListener('click', () => {
+    showTimerSelectionModal(taskItem);
+  });
+  
+  removeTimerBtn.addEventListener('click', () => {
+    const taskId = taskItem.getAttribute('data-task-id');
+    localStorage.removeItem(`task-timer-${taskId}`);
+    localStorage.removeItem(`task-timer-preset-${taskId}`);
+    localStorage.removeItem(`task-timer-running-${taskId}`);
+    addTimerBtn.style.display = 'block';
+    timerSection.style.display = 'none';
+    
+    const timerInterval = taskItem.timerInterval;
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      taskItem.timerInterval = null;
+    }
+  });
+}
+
+function showTimerSelectionModal(taskItem) {
+  const modal = document.getElementById('timer-selection-popup');
+  const confirmBtn = document.getElementById('confirm-timer');
+  const cancelBtn = document.getElementById('cancel-timer');
+  const hoursInput = document.getElementById('task-timer-hours');
+  const minutesInput = document.getElementById('task-timer-minutes');
+  const secondsInput = document.getElementById('task-timer-seconds');
+  
+  validateTimeInput(hoursInput, 23);
+  validateTimeInput(minutesInput, 59);
+  validateTimeInput(secondsInput, 59);
+  
+  modal.classList.remove('hidden');
+  
+  const handleConfirm = () => {
+    const hours = parseInt(hoursInput.value) || 0;
+    const minutes = parseInt(minutesInput.value) || 0;
+    const seconds = parseInt(secondsInput.value) || 0;
+    
+    const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+    
+    if (totalSeconds > 0) {
+      const taskId = taskItem.getAttribute('data-task-id');
+      localStorage.setItem(`task-timer-preset-${taskId}`, totalSeconds);
+      
+      const addTimerBtn = taskItem.querySelector('.add-timer-btn');
+      const timerSection = taskItem.querySelector('.task-timer');
+      addTimerBtn.style.display = 'none';
+      timerSection.style.display = 'block';
+      initializeTimer(taskItem, totalSeconds);
+    }
+    
+    modal.classList.add('hidden');
+    cleanup();
+  };
+  
+  const handleCancel = () => {
+    modal.classList.add('hidden');
+    cleanup();
+  };
+  
+  const cleanup = () => {
+    confirmBtn.removeEventListener('click', handleConfirm);
+    cancelBtn.removeEventListener('click', handleCancel);
+    modal.removeEventListener('click', handleModalClick);
+  };
+  
+  const handleModalClick = (e) => {
+    if (e.target === modal) {
+      handleCancel();
+    }
+  };
+  
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+  modal.addEventListener('click', handleModalClick);
+}
+
+function initializeTimer(taskItem, presetSeconds = null) {
+  const timerDisplay = taskItem.querySelector('.timer-time');
+  const startBtn = taskItem.querySelector('.timer-start-btn');
+  const pauseBtn = taskItem.querySelector('.timer-pause-btn');
+  const resetBtn = taskItem.querySelector('.timer-reset-btn');
+  const progressFill = taskItem.querySelector('.timer-progress-fill');
+  
+  const taskId = taskItem.getAttribute('data-task-id');
+  let seconds = 0;
+  let presetTime = 0;
+  
+  if (presetSeconds !== null) {
+    presetTime = presetSeconds;
+    seconds = presetSeconds;
+  } else {
+    presetTime = parseInt(localStorage.getItem(`task-timer-preset-${taskId}`)) || 0;
+    const savedSeconds = localStorage.getItem(`task-timer-${taskId}`);
+    seconds = savedSeconds ? parseInt(savedSeconds) : presetTime;
+  }
+  
+  function updateTimerDisplay() {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    
+    if (presetTime > 0) {
+      const progress = ((presetTime - seconds) / presetTime) * 100;
+      progressFill.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+    } else {
+      progressFill.style.width = '0%';
+    }
+  }
+  
+  function completeTask() {
+    const taskTitle = taskItem.querySelector('.task-title').textContent;
+    const taskDescription = taskItem.querySelector('.task-description')?.textContent || '';
+    const taskDueDate = taskItem.querySelector('.task-due-date')?.textContent.replace('Due: ', '') || '';
+    const taskPriority = taskItem.querySelector('.task-priority span')?.textContent || '';
+    
+    const presetTime = parseInt(localStorage.getItem(`task-timer-preset-${taskId}`)) || 0;
+    const remainingTime = parseInt(localStorage.getItem(`task-timer-${taskId}`)) || 0;
+    const timeSpent = Math.max(0, presetTime - remainingTime);
+    
+    if (timeSpent > 0) {
+      saveTaskTimeData(taskTitle, timeSpent);
+    }
+    
+    addCompletedCardWithChartUpdate(taskTitle, taskDescription, taskDueDate, taskPriority);
+    
+    let tasks = store.get("tasks") || [];
+    tasks = tasks.filter(task => task.id !== taskId);
+    store.set("tasks", tasks);
+    
+    localStorage.removeItem(`task-timer-${taskId}`);
+    localStorage.removeItem(`task-timer-preset-${taskId}`);
+    localStorage.removeItem(`task-timer-running-${taskId}`);
+    
+    taskItem.remove();
+    
+    noTasks = tasks.length;
+    store.set("noTasks", noTasks);
+    if (noTasks === 0) showNoTasks(true);
+    updateStatsAndCharts();
+    recountPriorities();
+    checkPriorityCounts();
+  }
+  
+  function startTimer() {
+    if (taskItem.timerInterval) return;
+    localStorage.setItem(`task-timer-running-${taskId}`, 'true');
+    
+    taskItem.timerInterval = setInterval(() => {
+      if (seconds > 0) {
+        seconds--;
+        updateTimerDisplay();
+        localStorage.setItem(`task-timer-${taskId}`, seconds);
+      }
+      
+      if (seconds === 0) {
+        clearInterval(taskItem.timerInterval);
+        taskItem.timerInterval = null;
+        localStorage.removeItem(`task-timer-running-${taskId}`);
+        
+        const taskTitle = taskItem.querySelector('.task-title').textContent;
+        
+        const confirmComplete = confirm(`Timer finished for "${taskTitle}"!\n\nWould you like to mark this task as completed?`);
+        
+        if (confirmComplete) {
+          playNotificationSound();
+          showNotification('⏰ Task timer completed! Task marked as complete.', 'success');
+          completeTask();
+        } else {
+          updateTimerDisplay();
+          startBtn.style.display = 'inline-block';
+          pauseBtn.style.display = 'none';
+          playNotificationSound();
+          showNotification('⏰ Timer completed! Task not marked as complete.', 'info');
+        }
+      }
+    }, 1000);
+    startBtn.style.display = 'none';
+    pauseBtn.style.display = 'inline-block';
+  }
+  
+  function pauseTimer() {
+    if (taskItem.timerInterval) {
+      clearInterval(taskItem.timerInterval);
+      taskItem.timerInterval = null;
+    }
+    localStorage.removeItem(`task-timer-running-${taskId}`);
+    startBtn.style.display = 'inline-block';
+    pauseBtn.style.display = 'none';
+  }
+  
+  function resetTimer() {
+    pauseTimer();
+    seconds = presetTime;
+    updateTimerDisplay();
+    if (seconds > 0) {
+      localStorage.setItem(`task-timer-${taskId}`, seconds);
+    } else {
+      localStorage.removeItem(`task-timer-${taskId}`);
+    }
+  }
+  
+  const wasRunning = localStorage.getItem(`task-timer-running-${taskId}`) === 'true';
+  if (wasRunning) {
+    localStorage.removeItem(`task-timer-running-${taskId}`);
+  }
+  
+  updateTimerDisplay();
+  
+  startBtn.addEventListener('click', startTimer);
+  pauseBtn.addEventListener('click', pauseTimer);
+  resetBtn.addEventListener('click', resetTimer);
+  
+  const completeBtn = taskItem.querySelector('.complete-btn');
+  completeBtn.addEventListener('click', () => {
+    const originalTime = presetTime;
+    const timeSpent = originalTime - seconds;
+    if (timeSpent > 0) {
+      const timeSpentFormatted = formatTimeSpent(timeSpent);
+      showNotification(`Task completed! Time spent: ${timeSpentFormatted}`, 'success');
+      playNotificationSound();
+    }
+    pauseTimer();
+  });
+}
+
+function formatTimeSpent(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m`;
+  } else {
+    return `${totalSeconds}s`;
+  }
+}
 
 function recountPriorities() {
   numLow = 0; numMedium = 0; numHigh = 0;
@@ -272,6 +573,23 @@ document.addEventListener("click", (event) => {
     const dueDate = dueDateText.replace("Due: ", "");
     const prioritySpan = taskItem.querySelector(".task-priority span");
     const priority = prioritySpan ? prioritySpan.textContent : "";
+    
+    const taskId = taskItem.getAttribute('data-task-id');
+    
+    if (taskId) {
+      const presetTime = parseInt(localStorage.getItem(`task-timer-preset-${taskId}`)) || 0;
+      const remainingTime = parseInt(localStorage.getItem(`task-timer-${taskId}`)) || 0;
+      const timeSpent = Math.max(0, presetTime - remainingTime);
+      
+      if (timeSpent > 0) {
+        saveTaskTimeData(title, timeSpent);
+      }
+       
+      localStorage.removeItem(`task-timer-${taskId}`);
+      localStorage.removeItem(`task-timer-preset-${taskId}`);
+      localStorage.removeItem(`task-timer-running-${taskId}`);
+    }
+    
     if (taskItem) {
       addCompletedCardWithChartUpdate(title, description, dueDate, priority);
       let tasks = store.get("tasks") || [];
@@ -559,6 +877,42 @@ const renderPage = (page) => {
   if (focusSection) focusSection.style.display = (page === 'focus') ? '' : 'none';
 }
 
+const displayCompletedCard = (title, description, dueDate, priority) => {
+  const compList = document.getElementById("comp-list");
+  if (compList) {
+    const compItem = document.createElement("div");
+    compItem.className = "comp-item";
+    const backgroundSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>`
+
+    let priorityClass = "";
+    if (priority === "low"){
+       priorityClass = "priorityLow";
+    }
+    else if (priority === "medium") {
+      priorityClass = "priorityMedium";
+    }
+    else if (priority === "high") {
+      priorityClass = "priorityHigh";
+    }
+    compItem.innerHTML = `
+          <h3 class="comp-title">${title}</h3>
+          ${description ? `<p class="comp-description">${description}</p>` : ""}
+          ${dueDate ? `<p class="comp-due-date">Due: ${dueDate}</p>` : ""}
+          ${
+            priority
+              ? `<p class="comp-priority">Priority: <span class="${priorityClass}">${priority}</span></p>`
+              : ""
+          }
+      `;
+    compItem.appendChild(new DOMParser().parseFromString(backgroundSVG, 'image/svg+xml').documentElement);
+    compList.prepend(compItem);
+    const noCompMsg = document.querySelector(".no-comp");
+    if (noCompMsg) noCompMsg.style.display = 'none';
+    
+    updateDeleteAllCompletedButton();
+  }
+}
+
 const addCompletedCard = (title, description, dueDate, priority) => {
   const compList = document.getElementById("comp-list");
   if (compList) {
@@ -587,9 +941,35 @@ const addCompletedCard = (title, description, dueDate, priority) => {
           }
       `;
     compItem.appendChild(new DOMParser().parseFromString(backgroundSVG, 'image/svg+xml').documentElement);
-    compList.appendChild(compItem);
+    compList.prepend(compItem);
     const noCompMsg = document.querySelector(".no-comp");
     if (noCompMsg) noCompMsg.style.display = 'none';
+    
+    let completedTasks = store.get("completedTasks") || [];
+    completedTasks.push({
+      title,
+      description,
+      dueDate,
+      priority,
+      completed: true,
+      completedAt: new Date().toISOString()
+    });
+    store.set("completedTasks", completedTasks);
+    
+    updateDeleteAllCompletedButton();
+  }
+}
+
+function updateDeleteAllCompletedButton() {
+  const completedTasks = store.get("completedTasks") || [];
+  const visibleCompletedTasks = completedTasks.filter(task => !task.hidden);
+  const deleteAllBtn = document.querySelector(".delete-all-completed-btn");
+  if (deleteAllBtn) {
+    if (visibleCompletedTasks.length >= 2) {
+      deleteAllBtn.style.display = 'block';
+    } else {
+      deleteAllBtn.style.display = 'none';
+    }
   }
 }
 
@@ -619,16 +999,85 @@ document.addEventListener("click", (event) => {
     overlay.querySelector(".confirm-delete-comp").addEventListener("click", () => {
       compItem.remove();
       let completedTasks = store.get("completedTasks") || [];
-      completedTasks = completedTasks.filter((t) => t.title !== title);
+      
+      const taskIndex = completedTasks.findIndex((t) => t.title === title);
+      if (taskIndex !== -1) {
+        completedTasks[taskIndex].hidden = true;
+      }
+      
       store.set("completedTasks", completedTasks);
-      completed = completedTasks.length;
+      const visibleCompletedTasks = completedTasks.filter(task => !task.hidden);
+      completed = visibleCompletedTasks.length;
       store.set("completedCount", completed);
+      
       overlay.remove();
       updateStatsAndCharts();
-      if (completedTasks.length === 0) {
+      updateStreakDisplay();
+      if (visibleCompletedTasks.length === 0) {
         const noCompMsg = document.querySelector(".no-comp");
         if (noCompMsg) noCompMsg.style.display = '';
       }
+      updateDeleteAllCompletedButton();
+    });
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (event.target.classList.contains("delete-all-completed-btn")) {
+    const completedTasks = store.get("completedTasks") || [];
+    const visibleCompletedTasks = completedTasks.filter(task => !task.hidden);
+    
+    if (visibleCompletedTasks.length === 0) return;
+    
+    const overlay = document.createElement("div");
+    overlay.className = "delete-comp-overlay";
+    const popup = document.createElement("div");
+    popup.className = "delete-comp-popup";
+    popup.innerHTML = `
+      <h2>Delete All Completed Tasks?</h2>
+      <p>Are you sure you want to delete all <strong>${visibleCompletedTasks.length}</strong> completed tasks? This action cannot be undone.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="confirm-delete-all-comp">Delete All</button>
+        <button class="cancel-delete-all-comp">Cancel</button>
+      </div>
+    `;
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+
+    overlay.querySelector(".cancel-delete-all-comp").addEventListener("click", () => {
+      overlay.remove();
+    });
+
+    overlay.querySelector(".confirm-delete-all-comp").addEventListener("click", () => {
+      const compList = document.getElementById("comp-list");
+      if (compList) {
+        compList.innerHTML = '';
+      }
+      
+      let completedTasks = store.get("completedTasks") || [];
+      completedTasks.forEach(task => {
+        if (!task.hidden) {
+          task.hidden = true;
+        }
+      });
+      
+      store.set("completedTasks", completedTasks);
+      store.set("completedCount", 0);
+      completed = 0;
+      
+      const noCompMsg = document.querySelector(".no-comp");
+      if (noCompMsg) noCompMsg.style.display = '';
+      
+      updateDeleteAllCompletedButton();
+      
+      updateStatsAndCharts();
+      updateStreakDisplay();
+      
+      overlay.remove();
     });
 
     overlay.addEventListener("click", (e) => {
@@ -646,8 +1095,37 @@ const resetBtn = document.getElementById('reset');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPopup = document.getElementById('settings-popup');
 const settingsPopupContent = document.querySelector('.settings-popup-content');
-const focusDurationInput = document.getElementById('focus-duration');
-const breakDurationInput = document.getElementById('break-duration');
+const focusHoursInput = document.getElementById('focus-hours');
+const focusMinutesInput = document.getElementById('focus-minutes');
+const focusSecondsInput = document.getElementById('focus-seconds');
+const breakHoursInput = document.getElementById('break-hours');
+const breakMinutesInput = document.getElementById('break-minutes');
+const breakSecondsInput = document.getElementById('break-seconds');
+
+function validateTimeInput(input, maxValue) {
+  input.addEventListener('input', function() {
+    let value = parseInt(this.value);
+    if (value > maxValue) {
+      this.value = maxValue;
+    } else if (value < 0) {
+      this.value = 0;
+    }
+  });
+  
+  input.addEventListener('blur', function() {
+    if (this.value === '' || isNaN(parseInt(this.value))) {
+      this.value = 0;
+    }
+  });
+}
+
+validateTimeInput(focusHoursInput, 23);
+validateTimeInput(focusMinutesInput, 59);
+validateTimeInput(focusSecondsInput, 59);
+validateTimeInput(breakHoursInput, 23);
+validateTimeInput(breakMinutesInput, 59);
+validateTimeInput(breakSecondsInput, 59);
+
 const saveSettingsBtn = document.getElementById('save-settings');
 const cancelSettingsBtn = document.getElementById('cancel-settings');
 
@@ -658,6 +1136,55 @@ const resetBreakBtn = document.getElementById('reset-break');
 const startStopwatchBtn = document.getElementById('start-stopwatch');
 const pauseStopwatchBtn = document.getElementById('pause-stopwatch');
 const resetStopwatchBtn = document.getElementById('reset-stopwatch');
+
+function playNotificationSound() {
+  try {
+    const audio = new Audio('Assets/sounds/beep.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(error => {
+      console.log('Audio playback failed:', error);
+    });
+  } catch (error) {
+    console.log('Audio not available:', error);
+  }
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#4CAF50' : '#2196F3'};
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 10000;
+    font-weight: bold;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}
 
 let focusDuration = parseInt(localStorage.getItem('focusDuration')) || 25;
 let breakDuration = parseInt(localStorage.getItem('breakDuration')) || 5;
@@ -676,7 +1203,8 @@ function formatTime(seconds, showHours=false) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  if (showHours) {
+  
+  if (h > 0 || showHours) {
     return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
   }
   return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
@@ -700,7 +1228,8 @@ startPauseBtn.addEventListener('click', () => {
         clearInterval(timerInterval);
         timerRunning = false;
         startPauseBtn.textContent = 'Start';
-        alert('Focus session complete!');
+        playNotificationSound();
+        showNotification('🎯 Focus session complete! Great work!', 'success');
         recordPomodoroSession(focusDuration, 0);
       }
     }, 1000);
@@ -724,19 +1253,46 @@ resetBtn.addEventListener('click', () => {
 
 settingsBtn.addEventListener('click', () => {
   settingsPopup.classList.remove('hidden');
-  focusDurationInput.value = focusDuration;
-  breakDurationInput.value = breakDuration;
+  
+  const savedFocusHours = parseInt(localStorage.getItem('focusHours')) || Math.floor(timerSeconds / 3600);
+  const savedFocusMinutes = parseInt(localStorage.getItem('focusMinutes')) || Math.floor((timerSeconds % 3600) / 60);
+  const savedFocusSeconds = parseInt(localStorage.getItem('focusSecondsValue')) || (timerSeconds % 60);
+  const savedBreakHours = parseInt(localStorage.getItem('breakHours')) || Math.floor(breakSeconds / 3600);
+  const savedBreakMinutes = parseInt(localStorage.getItem('breakMinutes')) || Math.floor((breakSeconds % 3600) / 60);
+  const savedBreakSecondsValue = parseInt(localStorage.getItem('breakSecondsValue')) || (breakSeconds % 60);
+  
+  focusHoursInput.value = savedFocusHours;
+  focusMinutesInput.value = savedFocusMinutes;
+  focusSecondsInput.value = savedFocusSeconds;
+  breakHoursInput.value = savedBreakHours;
+  breakMinutesInput.value = savedBreakMinutes;
+  breakSecondsInput.value = savedBreakSecondsValue;
 });
 
 saveSettingsBtn.addEventListener('click', () => {
-  focusDuration = parseInt(focusDurationInput.value) || 25;
-  breakDuration = parseInt(breakDurationInput.value) || 5;
+  const focusHours = parseInt(focusHoursInput.value) || 0;
+  const focusMinutes = parseInt(focusMinutesInput.value) || 25;
+  const focusSeconds = parseInt(focusSecondsInput.value) || 0;
+  const breakHours = parseInt(breakHoursInput.value) || 0;
+  const breakMinutes = parseInt(breakMinutesInput.value) || 5;
+  const breakSecondsValue = parseInt(breakSecondsInput.value) || 0;
+  
+  focusDuration = focusMinutes;
+  breakDuration = breakMinutes;
+  timerSeconds = (focusHours * 3600) + (focusMinutes * 60) + focusSeconds;
+  breakSeconds = (breakHours * 3600) + (breakMinutes * 60) + breakSecondsValue;
+  
   localStorage.setItem('focusDuration', focusDuration);
   localStorage.setItem('breakDuration', breakDuration);
-  timerSeconds = focusDuration * 60;
-  breakSeconds = breakDuration * 60;
   localStorage.setItem('focusTimerSeconds', timerSeconds);
   localStorage.setItem('breakTimerSeconds', breakSeconds);
+  localStorage.setItem('focusHours', focusHours);
+  localStorage.setItem('focusMinutes', focusMinutes);
+  localStorage.setItem('focusSecondsValue', focusSeconds);
+  localStorage.setItem('breakHours', breakHours);
+  localStorage.setItem('breakMinutes', breakMinutes);
+  localStorage.setItem('breakSecondsValue', breakSecondsValue);
+  
   updateDisplays();
   settingsPopup.classList.add('hidden');
 });
@@ -760,7 +1316,8 @@ startBreakBtn.addEventListener('click', () => {
         clearInterval(breakInterval);
         breakRunning = false;
         startBreakBtn.textContent = 'Start';
-        alert('Break is over!');
+        playNotificationSound();
+        showNotification('⏰ Break is over! Time to get back to work!', 'info');
         recordPomodoroSession(0, breakDuration);
       }
     }, 1000);
@@ -860,17 +1417,18 @@ const getStreak = () => {
   return streak;
 };
 
-window.addEventListener('DOMContentLoaded', () => {
+function updateStreakDisplay() {
   const streakCountElem = document.querySelector('.streak-count');
   if (streakCountElem) {
     const streak = getStreak();
     streakCountElem.textContent = `${streak}x Streak`;
   }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateStreakDisplay();
   setInterval(() => {
-    const streak = getStreak();
-    if (streakCountElem) {
-      streakCountElem.textContent = `${streak}x Streak`;
-    }
+    updateStreakDisplay();
   }, 60 * 1000);
 });
 
@@ -990,7 +1548,6 @@ let streakChartInstance, completionChartInstance, categoryChartInstance, pomodor
 function updateAllCharts() {
   const stats = getStatsData();
   
-  // Global Chart.js font configuration to fix text stretching
   Chart.defaults.font = {
     family: "'Segoe UI', system-ui, -apple-system, sans-serif",
     size: 13,
@@ -1322,11 +1879,179 @@ function updateAllCharts() {
 
 window.addEventListener('DOMContentLoaded', () => {
   updateAllCharts();
+  updateAdvancedAnalytics();
 });
 
 function updateStatsAndCharts() {
   updateAllCharts();
+  updateAdvancedAnalytics();
+  updateSearchVisibility();
 }
+
+function updateSearchVisibility() {
+  const activeTasks = store.get("tasks") || [];
+  const completedTasks = store.get("completedTasks") || [];
+  
+  const tasksSearch = document.querySelector('.tasks-search');
+  const completedSearch = document.querySelector('.completed-search');
+  
+  if (tasksSearch) {
+    tasksSearch.style.display = activeTasks.length > 0 ? 'block' : 'none';
+  }
+  
+  if (completedSearch) {
+    completedSearch.style.display = completedTasks.length > 0 ? 'block' : 'none';
+  }
+}
+
+function updateAdvancedAnalytics() {
+  updateTimeTracking();
+  updatePerformanceMetrics();
+}
+
+function updateTimeTracking() {
+  const totalTimeToday = calculateTotalTimeToday();
+  const avgTimePerTask = calculateAverageTimePerTask();
+  const productiveHour = getMostProductiveHour();
+  
+  document.getElementById('total-time-today').textContent = formatTimeSpent(totalTimeToday);
+  document.getElementById('avg-time-task').textContent = formatTimeSpent(avgTimePerTask);
+  document.getElementById('productive-hour').textContent = productiveHour || 'N/A';
+}
+
+function updatePerformanceMetrics() {
+  const completionRate = calculateCompletionRate();
+  const goalProgress = calculateDailyGoalProgress();
+  
+  document.getElementById('completion-rate-bar').style.width = `${completionRate}%`;
+  document.getElementById('completion-rate-value').textContent = `${Math.round(completionRate)}%`;
+  
+  const [completed, goal] = goalProgress;
+  const progressPercentage = goal > 0 ? (completed / goal) * 100 : 0;
+  document.getElementById('goal-progress-bar').style.width = `${Math.min(progressPercentage, 100)}%`;
+  document.getElementById('goal-progress-value').textContent = `${completed}/${goal}`;
+  
+  savePerformanceMetrics(completionRate, completed, goal);
+}
+
+function savePerformanceMetrics(completionRate, completedToday, dailyGoal) {
+  const today = new Date().toDateString();
+  const performanceData = JSON.parse(localStorage.getItem('performanceData')) || {};
+  
+  performanceData[today] = {
+    completionRate: completionRate,
+    completedTasks: completedToday,
+    dailyGoal: dailyGoal,
+    date: new Date().toISOString()
+  };
+  
+  localStorage.setItem('performanceData', JSON.stringify(performanceData));
+}
+
+function calculateTotalTimeToday() {
+  const today = new Date().toDateString();
+  const timeTrackingData = JSON.parse(localStorage.getItem('timeTrackingData')) || {};
+  const todayData = timeTrackingData[today] || { tasks: [], totalTime: 0 };
+  
+  return todayData.totalTime || 0;
+}
+
+function calculateAverageTimePerTask() {
+  const timeTrackingData = JSON.parse(localStorage.getItem('timeTrackingData')) || {};
+  
+  let totalTime = 0;
+  let tasksWithTime = 0;
+  
+  Object.keys(timeTrackingData).forEach(date => {
+    const dayData = timeTrackingData[date];
+    if (dayData.tasks && dayData.tasks.length > 0) {
+      dayData.tasks.forEach(task => {
+        if (task.timeSpent > 0) {
+          totalTime += task.timeSpent;
+          tasksWithTime++;
+        }
+      });
+    }
+  });
+  
+  return tasksWithTime > 0 ? Math.round(totalTime / tasksWithTime) : 0;
+}
+
+function saveTaskTimeData(taskTitle, timeSpent) {
+  const today = new Date().toDateString();
+  const timeTrackingData = JSON.parse(localStorage.getItem('timeTrackingData')) || {};
+  
+  if (!timeTrackingData[today]) {
+    timeTrackingData[today] = { tasks: [], totalTime: 0 };
+  }
+  
+  timeTrackingData[today].tasks.push({
+    title: taskTitle,
+    timeSpent: timeSpent,
+    completedAt: new Date().toISOString()
+  });
+  
+  timeTrackingData[today].totalTime += timeSpent;
+  
+  localStorage.setItem('timeTrackingData', JSON.stringify(timeTrackingData));
+}
+
+function getMostProductiveHour() {
+  const timeTrackingData = JSON.parse(localStorage.getItem('timeTrackingData')) || {};
+  const hourCounts = {};
+  
+  Object.keys(timeTrackingData).forEach(date => {
+    const dayData = timeTrackingData[date];
+    if (dayData.tasks) {
+      dayData.tasks.forEach(task => {
+        if (task.completedAt) {
+          const hour = new Date(task.completedAt).getHours();
+          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        }
+      });
+    }
+  });
+  
+  let maxHour = null;
+  let maxCount = 0;
+  
+  Object.keys(hourCounts).forEach(hour => {
+    if (hourCounts[hour] > maxCount) {
+      maxCount = hourCounts[hour];
+      maxHour = hour;
+    }
+  });
+  
+  if (maxHour !== null) {
+    const hour12 = maxHour % 12 || 12;
+    const ampm = maxHour >= 12 ? 'PM' : 'AM';
+    return `${hour12}:00 ${ampm}`;
+  }
+  
+  return null;
+}
+
+function calculateCompletionRate() {
+  const completedTasks = store.get("completedTasks") || [];
+  const tasks = store.get("tasks") || [];
+  const totalTasks = completedTasks.length + tasks.length;
+  
+  if (totalTasks === 0) return 0;
+  return (completedTasks.length / totalTasks) * 100;
+}
+
+function calculateDailyGoalProgress() {
+  const dailyGoal = 5;
+  const today = new Date().toDateString();
+  const completedTasks = store.get("completedTasks") || [];
+  
+  const todayCompleted = completedTasks.filter(task => 
+    task.completedAt && new Date(task.completedAt).toDateString() === today
+  ).length;
+  
+  return [todayCompleted, dailyGoal];
+}
+
 
 const originalAddTaskFunction = addTask;
 const addTaskWithChartUpdate = (task, description, dueDate, priority, skipSave = false) => {
@@ -1338,6 +2063,7 @@ const originalAddCompletedCardFunction = addCompletedCard;
 const addCompletedCardWithChartUpdate = (title, description, dueDate, priority) => {
   originalAddCompletedCardFunction(title, description, dueDate, priority);
   updateStatsAndCharts();
+  updateStreakDisplay();
 };
 
 document.addEventListener("click", (event) => {
@@ -1444,4 +2170,18 @@ if (tasksSearchInput) {
     }
   });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  const dueDateInput = document.getElementById('due-date');
+  if (dueDateInput) {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+    dueDateInput.value = todayString;
+    
+    dueDateInput.setAttribute('value', todayString);
+  }
+});
 

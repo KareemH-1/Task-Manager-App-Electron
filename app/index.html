@@ -193,6 +193,7 @@
       <div class="list com-container">
         <h1 class="no-comp">You haven't completed a task yet</h1>
         <ul id="comp-list"></ul>
+        <button class="delete-all-completed-btn" style="display: none;">Delete All Completed Tasks</button>
       </div>
     </section>
 
@@ -233,6 +234,43 @@
           <h2>Weekly Summary</h2>
           <canvas id="weeklyChart"></canvas>
         </div>
+        <div class="stats-item stats-time-tracking" style="grid-row: 4 / 5; grid-column: 1 / 2;">
+          <h2>Time Tracking</h2>
+          <div class="time-stats">
+            <div class="time-stat">
+              <span class="label">Total Time Today:</span>
+              <span class="value" id="total-time-today">0h 0m</span>
+            </div>
+            <div class="time-stat">
+              <span class="label">Average per Task:</span>
+              <span class="value" id="avg-time-task">0h 0m</span>
+            </div>
+            <div class="time-stat">
+              <span class="label">Most Productive Hour:</span>
+              <span class="value" id="productive-hour">N/A</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stats-item stats-performance" style="grid-row: 4 / 5; grid-column: 2 / 4;">
+          <h2>Performance</h2>
+          <div class="performance-stats">
+            <div class="performance-metric">
+              <span class="metric-label">Completion Rate</span>
+              <div class="metric-bar">
+                <div class="metric-fill" id="completion-rate-bar"></div>
+              </div>
+              <span class="metric-value" id="completion-rate-value">0%</span>
+            </div>
+            <div class="performance-metric">
+              <span class="metric-label">Daily Goal Progress</span>
+              <div class="metric-bar">
+                <div class="metric-fill" id="goal-progress-bar"></div>
+              </div>
+              <span class="metric-value" id="goal-progress-value">0/5</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     <section id="focus" class="content">
@@ -270,10 +308,26 @@
       <div id="settings-popup" class="settings-popup hidden">
         <div class="settings-popup-content">
           <h2>Focus Settings</h2>
-          <label for="focus-duration">Focus Duration (minutes):</label>
-          <input type="number" id="focus-duration" min="1" max="120" value="25" />
-          <label for="break-duration">Break Duration (minutes):</label>
-          <input type="number" id="break-duration" min="1" max="60" value="5" />
+          <div class="timer-input-group">
+            <label for="focus-duration">Focus Duration:</label>
+            <div class="time-inputs">
+              <input type="number" id="focus-hours" min="0" max="23" value="0" placeholder="Hours" />
+              <span>:</span>
+              <input type="number" id="focus-minutes" min="0" max="59" value="25" placeholder="Minutes" />
+              <span>:</span>
+              <input type="number" id="focus-seconds" min="0" max="59" value="0" placeholder="Seconds" />
+            </div>
+          </div>
+          <div class="timer-input-group">
+            <label for="break-duration">Break Duration:</label>
+            <div class="time-inputs">
+              <input type="number" id="break-hours" min="0" max="23" value="0" placeholder="Hours" />
+              <span>:</span>
+              <input type="number" id="break-minutes" min="0" max="59" value="5" placeholder="Minutes" />
+              <span>:</span>
+              <input type="number" id="break-seconds" min="0" max="59" value="0" placeholder="Seconds" />
+            </div>
+          </div>
           <div class="settings-popup-actions">
             <button id="save-settings">Save</button>
             <button id="cancel-settings">Cancel</button>
@@ -281,6 +335,26 @@
         </div>
       </div>
     </section>
+
+    <div id="timer-selection-popup" class="popup-overlay hidden">
+      <div class="popup-content">
+        <h2>Set Timer Duration</h2>
+        <div class="timer-input-group">
+          <label>Timer Duration:</label>
+          <div class="time-inputs">
+            <input type="number" id="task-timer-hours" min="0" max="23" value="0" placeholder="Hours" />
+            <span>:</span>
+            <input type="number" id="task-timer-minutes" min="0" max="59" value="25" placeholder="Minutes" />
+            <span>:</span>
+            <input type="number" id="task-timer-seconds" min="0" max="59" value="0" placeholder="Seconds" />
+          </div>
+        </div>
+        <div class="popup-actions">
+          <button id="confirm-timer">Add Timer</button>
+          <button id="cancel-timer">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
     <script type="module" src="script.js"></script>
